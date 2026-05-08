@@ -25,35 +25,63 @@ Scrivi SOLO la risposta finale, come se fossi tu la persona che risponde al mess
 
 Rispondi sempre nella stessa lingua del messaggio ricevuto.`;
 
-module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+const HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Content-Type': 'application/json',
+};
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Metodo non consentito' });
+exports.handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers: HEADERS, body: '' };
   }
 
-  const { message } = req.body || {};
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers: HEADERS,
+      body: JSON.stringify({ error: 'Metodo non consentito' }),
+    };
+  }
+
+  let body;
+  try {
+    body = JSON.parse(event.body || '{}');
+  } catch {
+    return {
+      statusCode: 400,
+      headers: HEADERS,
+      body: JSON.stringify({ error: 'Corpo della richiesta non valido' }),
+    };
+  }
+
+  const { message } = body;
 
   if (!message || typeof message !== 'string' || message.trim().length === 0) {
-    return res.status(400).json({ error: 'Messaggio non valido o vuoto' });
+    return {
+      statusCode: 400,
+      headers: HEADERS,
+      body: JSON.stringify({ error: 'Messaggio non valido o vuoto' }),
+    };
   }
 
   const safeMessage = message.trim().slice(0, 5000);
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'Chiave API non configurata' });
+    return {
+      statusCode: 500,
+      headers: HEADERS,
+      body: JSON.stringify({ error: 'Chiave API non configurata' }),
+    };
   }
 
   try {
     const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -71,17 +99,33 @@ module.exports = async function handler(req, res) {
 
     if (!openaiRes.ok) {
       console.error('OpenAI error:', data);
-      return res.status(openaiRes.status).json({ error: data.error?.message || 'Errore API OpenAI' });
+      return {
+        statusCode: openaiRes.status,
+        headers: HEADERS,
+        body: JSON.stringify({ error: data.error?.message || 'Errore API OpenAI' }),
+      };
     }
 
     const reply = data.choices?.[0]?.message?.content;
     if (!reply) {
-      return res.status(500).json({ error: 'Nessuna risposta ricevuta dal modello' });
+      return {
+        statusCode: 500,
+        headers: HEADERS,
+        body: JSON.stringify({ error: 'Nessuna risposta ricevuta dal modello' }),
+      };
     }
 
-    return res.status(200).json({ reply });
+    return {
+      statusCode: 200,
+      headers: HEADERS,
+      body: JSON.stringify({ reply }),
+    };
   } catch (err) {
     console.error('Server error:', err);
-    return res.status(500).json({ error: 'Errore interno del server' });
+    return {
+      statusCode: 500,
+      headers: HEADERS,
+      body: JSON.stringify({ error: 'Errore interno del server' }),
+    };
   }
 };
