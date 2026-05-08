@@ -1,0 +1,13 @@
+[build]
+  publish = "."
+
+[functions]
+  directory = "api"
+
+[functions.chat]
+  timeout = 26
+
+[[redirects]]
+  from = "/api/chat"
+  to = "/.netlify/functions/chat"
+  status = 200
