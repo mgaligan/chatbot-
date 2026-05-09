@@ -30,8 +30,7 @@ Output:
 - dammi solo il messaggio da mandare
 - niente spiegazioni
 - niente analisi
-- niente introduzioni".
-
+- niente introduzioni`;
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -59,12 +58,11 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'o4-mini',
-        reasoning_effort: 'medium',
         messages: [
           { role: 'system', content: FRA_SYSTEM_PROMPT },
           { role: 'user', content: safeMessage },
         ],
-        max_completion_tokens: 800,
+        max_tokens: 800,
       }),
     });
 
