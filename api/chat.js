@@ -62,7 +62,7 @@ module.exports = async function handler(req, res) {
           { role: 'system', content: FRA_SYSTEM_PROMPT },
           { role: 'user', content: safeMessage },
         ],
-        max_tokens: 800,
+  max_completion_tokens: 800,
       }),
     });
 
