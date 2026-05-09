@@ -61,7 +61,7 @@ module.exports = async function handler(req, res) {
 
   try {
     // Allow overriding model parameters from environment variables (useful on Vercel)
-  const MODEL = process.env.MODEL || 'o5-mini';
+  const MODEL = process.env.MODEL || '5-mini';
     const TEMPERATURE = typeof process.env.TEMPERATURE !== 'undefined'
       ? Math.max(0, Math.min(1, parseFloat(process.env.TEMPERATURE)))
       : 0.2; // default: low creativity, more deterministic reasoning
